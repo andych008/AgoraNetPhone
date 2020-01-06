@@ -1,0 +1,53 @@
+@startuml
+
+'请先安装PlantUML plugin查看该uml
+'该uml主要记录了被叫方状态转移的主要过程(黄色标签)，以及状态转移的条件(绿色箭头)'
+
+title __被叫视角__的时序图
+
+hide footbox
+entity "主叫手机" as CallingPhone
+entity "被叫手机" as CalledPhone
+boundary "声网平台" as agora
+actor "被叫用户" as CalledUser
+
+
+hnote over CalledPhone: Idle
+
+
+CallingPhone [#green]-> CalledPhone: 拔打
+
+hnote over CalledPhone: Ringing
+
+
+
+CalledUser [#green]-> CalledPhone: 接听
+
+hnote over CalledPhone: Connecting
+
+
+CalledPhone -> agora:请求进入房间
+agora [#green]--> CalledPhone:success
+note right#e0ffff : 被叫先进入房间
+
+
+hnote over CalledPhone: Connected
+
+CalledPhone -> CallingPhone: 已接听
+
+
+CallingPhone -> agora:请求进入房间
+agora --> CallingPhone:success
+note left#e0ffff : 主叫进入相同的房间
+
+CallingPhone [#green]-> CalledPhone: 就绪
+
+
+hnote over CalledPhone: Speaking
+
+CalledUser [#green]-> CalledPhone: 挂断
+
+
+hnote over CalledPhone: Idle
+
+@enduml

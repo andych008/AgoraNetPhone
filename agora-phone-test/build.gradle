@@ -1,0 +1,73 @@
+apply plugin: 'com.android.application'
+
+android {
+    compileSdkVersion 26
+
+    defaultConfig {
+        applicationId "wang.unclecat.agora.test"
+        minSdkVersion 17
+        targetSdkVersion 26
+        versionCode 1
+        versionName "1.0"
+        multiDexEnabled true
+
+        testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
+        ndk {
+            abiFilters "armeabi-v7a", "x86"
+        }
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+        }
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
+    }
+
+    lintOptions {
+        abortOnError false
+    }
+
+
+    //签名
+    signingConfigs {
+        debug {
+            storeFile new File(rootDir, "debug.keystore")
+        }
+    }
+
+    buildTypes {
+        debug {
+            minifyEnabled true
+            //Zipalign优化
+            zipAlignEnabled true
+            // 移除无用的resource文件
+            shrinkResources true
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+            //签名
+            signingConfig signingConfigs.debug
+        }
+    }
+    compileOptions {
+        sourceCompatibility 1.8
+        targetCompatibility 1.8
+    }
+
+}
+
+dependencies {
+    implementation project(':agora-phone')
+    implementation 'com.android.support:appcompat-v7:26.1.0'
+    implementation 'com.android.support:design:26.1.0'
+    implementation 'com.android.support:support-v4:26.1.0'
+    api 'com.blankj:utilcode:1.24.7'
+    androidTestImplementation('com.android.support.test:runner:1.0.2') {
+        exclude group: 'com.android.support', module: 'support-annotations'
+    }
+}
+

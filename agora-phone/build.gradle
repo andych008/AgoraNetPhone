@@ -1,0 +1,55 @@
+apply plugin: 'com.android.library'
+
+android {
+    compileSdkVersion rootProject.compileVersion
+
+
+    defaultConfig {
+        minSdkVersion rootProject.minVersion
+        targetSdkVersion rootProject.targetVersion
+        versionCode 1
+        versionName "1.0.1"
+        consumerProguardFiles 'consumer-proguard-rules.pro'
+
+        ndk {
+            abiFilters "armeabi-v7a", "x86"
+        }
+        multiDexEnabled true
+    }
+
+    lintOptions {
+        abortOnError false
+    }
+    compileOptions {
+        sourceCompatibility = 1.8
+        targetCompatibility = 1.8
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled true
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+        }
+    }
+
+}
+
+dependencies {
+    implementation fileTree(dir: 'libs', include: ['*.jar'])
+    implementation 'com.google.code.gson:gson:2.2.4'
+
+    compileOnly 'org.projectlombok:lombok:1.18.10'
+    annotationProcessor 'org.projectlombok:lombok:1.18.10'
+    // --=[ FSM ]=--
+    implementation('org.squirrelframework:squirrel-foundation:0.3.8') {
+        exclude(group: 'javaassist', module: 'javassist')
+        exclude(group: 'dom4j', module: 'dom4j')
+        exclude(group: 'org.slf4j', module: 'slf4j-log4j12')
+        exclude(group: 'log4j', module: 'log4j')
+        exclude(group: 'org.mvel', module: 'mvel2')
+        exclude(group: 'com.google.code.gson', module: 'gson')
+    }
+    // --=[ logger facade ]=--
+    implementation group: 'org.slf4j', name: 'slf4j-api', version: '1.7.5'
+
+}

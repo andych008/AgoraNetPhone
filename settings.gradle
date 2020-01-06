@@ -1,0 +1,1 @@
+include ':agora-phone',':agora-phone-test'
