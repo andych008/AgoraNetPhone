@@ -54,10 +54,16 @@ public class NetPhone {
 
     private final Gson gson = new Gson();
 
+    int testCase = 0;
 
-    @Setter
-    @Getter
-    private int testCase = 0;
+    public int getTestCase() {
+        return testCase;
+    }
+
+    public void setTestCase(int testCase) {
+        this.testCase = testCase;
+    }
+
     private Handler mainHandler = new Handler(Looper.getMainLooper());
 
     public static NetPhone getInstance() {
