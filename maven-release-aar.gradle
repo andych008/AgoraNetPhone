@@ -1,0 +1,24 @@
+apply plugin: 'maven'
+
+version = android.defaultConfig.versionName
+
+uploadArchives {
+    repositories.mavenDeployer {
+        def localMavenRepo = uri(new File(rootDir.parent, 'dwvipRepo'))
+//        println "localMavenRepo = ${localMavenRepo}"
+        repository(url: localMavenRepo)
+
+//        pom.project {
+//            groupId project.group
+//            artifactId project.name
+//            version android.defaultConfig.versionName
+//        }
+    }
+}
+
+
+/*
+使用要求:
+定义project.group = 'com.dwvip.demolib'
+引用apply from: '../maven-release-aar.gradle'
+*/
