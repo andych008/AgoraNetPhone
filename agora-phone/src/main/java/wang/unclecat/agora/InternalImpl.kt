@@ -6,7 +6,7 @@ import io.agora.rtc.RtcEngine
 import wang.unclecat.agora.utils.Logger
 import java.io.IOException
 
-internal class InternalImpl(private val netPhone: NetPhone,
+class InternalImpl(private val netPhone: NetPhone,
                             private val rtcEngine: RtcEngine):Internal {
 
     var remoteAccount: String? = null
@@ -65,7 +65,7 @@ internal class InternalImpl(private val netPhone: NetPhone,
         return false
     }
 
-    fun join(channel: String?) {
+    fun join(channel: String) {
         netPhone.joinChannel(channel)
     }
 
@@ -344,12 +344,13 @@ internal class InternalImpl(private val netPhone: NetPhone,
 
 
     private fun startMediaPlayer() {
-        if (NetPhone.getInstance().getTestCase() > 0) {
+        if (NetPhone.instance.testCase > 0) {
             //单元测试时不开启声音
             return
         }
+
         try {
-            val fileDescriptor = netPhone.mContext.assets.openFd("voice.mp3")
+            val fileDescriptor = netPhone.mContext!!.assets.openFd("voice.mp3")
             mMediaPlayer.setDataSource(fileDescriptor.fileDescriptor, fileDescriptor.startOffset, fileDescriptor.length)
             mMediaPlayer.prepare()
         } catch (e: IOException) {

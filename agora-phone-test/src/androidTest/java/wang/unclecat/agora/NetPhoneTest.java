@@ -39,7 +39,7 @@ public class NetPhoneTest {
         System.out.println("-----------------test1() called");
         sleep(2000);
 
-        NetPhone.getInstance().setTestCase(PhoneMsg.CALLING_test1);
+        NetPhone.getInstance().testCase = PhoneMsg.CALLING_test1;
         dial();
 
         sleep(100);
@@ -70,7 +70,7 @@ public class NetPhoneTest {
         System.out.println("-----------------test3() called");
         sleep(2000);
 
-        NetPhone.getInstance().setTestCase(PhoneMsg.CALLING_test3);
+        NetPhone.getInstance().testCase = PhoneMsg.CALLING_test3;
         dial();
 
         sleep(100);
@@ -89,7 +89,7 @@ public class NetPhoneTest {
         sleep(2000);
 
 
-        NetPhone.getInstance().setTestCase(PhoneMsg.CALLING_test4);
+        NetPhone.getInstance().testCase = PhoneMsg.CALLING_test4;
         dial();
 
         sleep(100);
