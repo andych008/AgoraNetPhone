@@ -15,7 +15,7 @@ interface Internal {
     /**
      * 当前状态
      */
-    InternalImpl.State getState();
+    PhoneState getState();
 
     /**
      * 挂断

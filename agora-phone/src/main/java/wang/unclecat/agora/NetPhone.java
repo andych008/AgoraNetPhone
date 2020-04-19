@@ -428,12 +428,12 @@ public class NetPhone {
     }
 
     //用于单元测试
-    InternalImpl.State getHostState() {
+    PhoneState getHostState() {
         return callingSide.getState();
     }
 
     //用于单元测试
-    InternalImpl.State getClientState() {
+    PhoneState getClientState() {
         return calledSide.getState();
     }
 

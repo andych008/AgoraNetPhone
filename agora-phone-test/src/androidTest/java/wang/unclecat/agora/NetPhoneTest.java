@@ -43,17 +43,18 @@ public class NetPhoneTest {
         dial();
 
         sleep(100);
-        assertEquals(InternalImpl.State.CONNECTING, NetPhone.getInstance().getHostState());
+
+        assertEquals(NetPhone.getInstance().getHostState(), PhoneState.CONNECTING.INSTANCE);
         System.out.println("--------CONNECTING---------");
 
 
         sleep(2000);
-        assertEquals(PhoneState.SPEAKING, NetPhone.getInstance().getHostState());
+        assertEquals(PhoneState.SPEAKING.INSTANCE, NetPhone.getInstance().getHostState());
         System.out.println("--------SPEAKING---------");
 
         NetPhone.getInstance().hangUp();
         sleep(1500);
-        assertEquals(PhoneState.IDLE, NetPhone.getInstance().getHostState());
+        assertEquals(PhoneState.IDLE.INSTANCE, NetPhone.getInstance().getHostState());
         System.out.println("----------IDLE-------");
     }
 
@@ -73,11 +74,11 @@ public class NetPhoneTest {
         dial();
 
         sleep(100);
-        assertEquals(PhoneState.CONNECTING, NetPhone.getInstance().getHostState());
+        assertEquals(PhoneState.CONNECTING.INSTANCE, NetPhone.getInstance().getHostState());
         System.out.println("--------CONNECTING---------");
 
         sleep(2500);
-        assertEquals(PhoneState.IDLE, NetPhone.getInstance().getHostState());
+        assertEquals(PhoneState.IDLE.INSTANCE, NetPhone.getInstance().getHostState());
         System.out.println("----------IDLE-------");
     }
 
@@ -92,12 +93,12 @@ public class NetPhoneTest {
         dial();
 
         sleep(100);
-        assertEquals(PhoneState.CONNECTING, NetPhone.getInstance().getHostState());
+        assertEquals(PhoneState.CONNECTING.INSTANCE, NetPhone.getInstance().getHostState());
         System.out.println("--------CONNECTING---------");
 
         NetPhone.getInstance().hangUp();
         sleep(1500);
-        assertEquals(PhoneState.IDLE, NetPhone.getInstance().getHostState());
+        assertEquals(PhoneState.IDLE.INSTANCE, NetPhone.getInstance().getHostState());
         System.out.println("----------IDLE-------");
     }
 
