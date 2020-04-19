@@ -8,7 +8,7 @@ import java.util.concurrent.CopyOnWriteArrayList;
  *
  * @author 喵叔catuncle    20-1-5
  */
-public class ObservableSupport {
+public class ObservableSupport implements ObservableInter {
 
     private CopyOnWriteArrayList<Event> objects;
 

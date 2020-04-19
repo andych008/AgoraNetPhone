@@ -23,8 +23,6 @@ import io.agora.rtm.RtmClientListener;
 import io.agora.rtm.RtmMessage;
 import io.agora.rtm.RtmStatusCode.ConnectionState;
 import io.agora.rtm.SendMessageOptions;
-import lombok.Getter;
-import lombok.Setter;
 import wang.unclecat.agora.utils.Logger;
 
 /**
@@ -70,6 +68,7 @@ public class NetPhone {
         return SingletonHolder.instance;
     }
 
+    InternalImpl internal;
     /**
      * 必须先初始化sdk
      *
@@ -101,28 +100,32 @@ public class NetPhone {
                         if (phoneMsg.getType() == PhoneMsg.CALLING) {
 
                             DialBean dialBean = gson.fromJson(phoneMsg.getMsg(), DialBean.class);
-                            calledSide.receive(peerId);
+                            calledSide.receive(peerId, dialBean);
 
                         } else if (phoneMsg.getType() == PhoneMsg.CALLING_test1) {
                             testCase = phoneMsg.getType();
-                            calledSide.receive(peerId);
+                            DialBean dialBean = gson.fromJson(phoneMsg.getMsg(), DialBean.class);
+                            calledSide.receive(peerId, dialBean);
                             mainHandler.postDelayed(() -> accept(), 100);
 
                         } else if (phoneMsg.getType() == PhoneMsg.CALLING_test2) {
                             testCase = phoneMsg.getType();
-                            calledSide.receive(peerId);
+                            DialBean dialBean = gson.fromJson(phoneMsg.getMsg(), DialBean.class);
+                            calledSide.receive(peerId, dialBean);
 
                             mainHandler.postDelayed(() -> accept(), 100);
 
                         } else if (phoneMsg.getType() == PhoneMsg.CALLING_test3) {
                             testCase = phoneMsg.getType();
-                            calledSide.receive(peerId);
+                            DialBean dialBean = gson.fromJson(phoneMsg.getMsg(), DialBean.class);
+                            calledSide.receive(peerId, dialBean);
 
                             mainHandler.postDelayed(() -> hangUp(), 100);
 
                         } else if (phoneMsg.getType() == PhoneMsg.CALLING_test4) {
                             testCase = phoneMsg.getType();
-                            calledSide.receive(peerId);
+                            DialBean dialBean = gson.fromJson(phoneMsg.getMsg(), DialBean.class);
+                            calledSide.receive(peerId, dialBean);
 
                         } else if (phoneMsg.getType() == PhoneMsg.ACCEPT) {
 
@@ -181,8 +184,9 @@ public class NetPhone {
             throw new RuntimeException("NEED TO check rtc sdk init fatal error\n" + Log.getStackTraceString(e));
         }
 
-        callingSide = new CallingSide(this, mRtcEngine);
-        calledSide = new CalledSide(this, mRtcEngine);
+        internal= new InternalImpl(this, mRtcEngine);
+        callingSide = new CallingSide(this, mRtcEngine, internal);
+        calledSide = new CalledSide(this, mRtcEngine, internal);
     }
 
     public void destroy() {
@@ -231,11 +235,11 @@ public class NetPhone {
         public void onJoinChannelSuccess(String channel, int uid, int elapsed) {
             Logger.d("onJoinChannelSuccess with: channel = " + channel + ", uid = " + uid + ", elapsed = " + elapsed + "");
             if (callingSide.isActive()) {
-                callingSide.handleOnJoinChannelSuccess(channel, uid, elapsed);
+                callingSide.handleOnJoinChannelSuccess();
             }
 
             if (calledSide.isActive()) {
-                calledSide.handleOnJoinChannelSuccess(channel, uid, elapsed);
+                calledSide.handleOnJoinChannelSuccess(channel);
             }
         }
 
@@ -255,10 +259,10 @@ public class NetPhone {
         public void onLeaveChannel(RtcStats stats) {
             Logger.d("onLeaveChannel with: stats = " + gson.toJson(stats) + "");
             if (callingSide.isActive()) {
-                callingSide.onHangUp();
+                callingSide.afterHangUp();
             }
             if (calledSide.isActive()) {
-                calledSide.onHangUp();
+                calledSide.afterHangUp();
             }
         }
 
@@ -268,6 +272,7 @@ public class NetPhone {
         }
 
     };
+
 
     /**
      * 拨打
@@ -423,12 +428,12 @@ public class NetPhone {
     }
 
     //用于单元测试
-    PhoneState getHostState() {
+    InternalImpl.State getHostState() {
         return callingSide.getState();
     }
 
     //用于单元测试
-    PhoneState getClientState() {
+    InternalImpl.State getClientState() {
         return calledSide.getState();
     }
 

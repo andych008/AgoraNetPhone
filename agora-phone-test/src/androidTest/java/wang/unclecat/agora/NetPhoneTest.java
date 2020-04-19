@@ -43,7 +43,7 @@ public class NetPhoneTest {
         dial();
 
         sleep(100);
-        assertEquals(PhoneState.CONNECTING, NetPhone.getInstance().getHostState());
+        assertEquals(InternalImpl.State.CONNECTING, NetPhone.getInstance().getHostState());
         System.out.println("--------CONNECTING---------");
 
 

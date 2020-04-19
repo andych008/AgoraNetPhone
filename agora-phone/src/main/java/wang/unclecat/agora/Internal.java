@@ -15,7 +15,7 @@ interface Internal {
     /**
      * 当前状态
      */
-    PhoneState getState();
+    InternalImpl.State getState();
 
     /**
      * 挂断
@@ -32,5 +32,5 @@ interface Internal {
     /**
      * 挂断后更新状态
      */
-    void onHangUp();
+    void afterHangUp();
 }
