@@ -45,10 +45,6 @@ dependencies {
     implementation fileTree(dir: 'libs', include: ['*.jar'])
     implementation 'com.google.code.gson:gson:2.2.4'
     implementation 'com.tinder.statemachine:statemachine:0.2.0'
-
-    // --=[ logger facade ]=--
-    implementation group: 'org.slf4j', name: 'slf4j-api', version: '1.7.5'
-
 }
 
 group = 'wang.unclecat'
