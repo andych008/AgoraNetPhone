@@ -28,7 +28,7 @@ internal class InternalImpl(private val netPhone: NetPhone,
     /**
      * 当前状态
      */
-    override fun getState(): PhoneState {
+    override fun state(): PhoneState {
         return phoneSM.state
     }
 
@@ -41,6 +41,75 @@ internal class InternalImpl(private val netPhone: NetPhone,
         return b
     }
 
+
+    /**
+     * 拨打
+     *
+     * @param remoteAccount 被叫方id
+     * @param dialBean      拨打参数
+     */
+    fun dial(remoteAccount: String, dialBean: DialBean?): Boolean {
+        Logger.d("dial with: remoteAccount = $remoteAccount, dialBean = $dialBean")
+        if (dialBean != null) {
+            // TODO: by catuncle 19-12-28 对方未登录，怎么处理
+            if (netPhone.checkStatus()) {
+                rtcEngine.setDefaultAudioRoutetoSpeakerphone(false)
+                netPhone.sendPeerMessage(remoteAccount, PhoneMsg.createDialMsg(dialBean).toJsonString())
+                this.remoteAccount = remoteAccount
+                transAndCheck(InternalImpl.Event.ADial)
+            } else {
+                Logger.d("用户未登录")
+            }
+            return true
+        }
+        return false
+    }
+
+    fun join(channel: String?) {
+        netPhone.joinChannel(channel)
+    }
+
+    /**
+     * 来电
+     *
+     * @param remoteAccount 主叫方id
+     */
+    fun receive(remoteAccount: String, dialBean: DialBean) {
+        Logger.d("receive() called with: remoteAccount = [$remoteAccount]")
+        if (this.isActive()) {
+            Logger.d("告诉主叫：占线")
+            netPhone.sendPeerMessage(remoteAccount, PhoneMsg.createHangUpAutoMsg().toJsonString())
+        } else {
+            this.remoteAccount = remoteAccount
+            this.dialBean = dialBean
+            transAndCheck(InternalImpl.Event.BReceive)
+        }
+    }
+
+    /**
+     * 接听
+     */
+    fun accept() {
+        Logger.d("accept()")
+        if (remoteAccount != null) {
+            netPhone.joinChannel(createChannel())
+            transAndCheck(InternalImpl.Event.BAccept)
+        }
+    }
+
+
+    /**
+     * 触发Join3，即将进入通话状态
+     */
+    fun join3() {
+        transAndCheck(InternalImpl.Event.BJoin3)
+    }
+
+    // TODO: by catuncle 19-12-24 模拟生成房间号
+    private fun createChannel(): String {
+        return "channel" + System.currentTimeMillis()
+    }
+
     /**
      * 挂断
      */
@@ -48,7 +117,7 @@ internal class InternalImpl(private val netPhone: NetPhone,
         Logger.d("hangUp() called")
 
         //告诉对方挂断呼叫
-        if (isActive) {
+        if (isActive()) {
             netPhone.sendPeerMessage(remoteAccount, PhoneMsg.createHangUpMsg().toJsonString())
         }
         if (phoneSM.state is PhoneState.ACalling ||phoneSM.state is PhoneState.Speaking) {

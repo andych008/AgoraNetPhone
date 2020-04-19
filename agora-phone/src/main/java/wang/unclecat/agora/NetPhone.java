@@ -43,9 +43,6 @@ public class NetPhone {
     private String appID;
     private String account;
 
-    private CallingSide callingSide;
-    private CalledSide calledSide;
-
 
     private RtcEngine mRtcEngine;// Tutorial Step 1
 
@@ -100,40 +97,40 @@ public class NetPhone {
                         if (phoneMsg.getType() == PhoneMsg.CALLING) {
 
                             DialBean dialBean = gson.fromJson(phoneMsg.getMsg(), DialBean.class);
-                            calledSide.receive(peerId, dialBean);
+                            internal.receive(peerId, dialBean);
 
                         } else if (phoneMsg.getType() == PhoneMsg.CALLING_test1) {
                             testCase = phoneMsg.getType();
                             DialBean dialBean = gson.fromJson(phoneMsg.getMsg(), DialBean.class);
-                            calledSide.receive(peerId, dialBean);
+                            internal.receive(peerId, dialBean);
                             mainHandler.postDelayed(() -> accept(), 100);
 
                         } else if (phoneMsg.getType() == PhoneMsg.CALLING_test2) {
                             testCase = phoneMsg.getType();
                             DialBean dialBean = gson.fromJson(phoneMsg.getMsg(), DialBean.class);
-                            calledSide.receive(peerId, dialBean);
+                            internal.receive(peerId, dialBean);
 
                             mainHandler.postDelayed(() -> accept(), 100);
 
                         } else if (phoneMsg.getType() == PhoneMsg.CALLING_test3) {
                             testCase = phoneMsg.getType();
                             DialBean dialBean = gson.fromJson(phoneMsg.getMsg(), DialBean.class);
-                            calledSide.receive(peerId, dialBean);
+                            internal.receive(peerId, dialBean);
 
                             mainHandler.postDelayed(() -> hangUp(), 100);
 
                         } else if (phoneMsg.getType() == PhoneMsg.CALLING_test4) {
                             testCase = phoneMsg.getType();
                             DialBean dialBean = gson.fromJson(phoneMsg.getMsg(), DialBean.class);
-                            calledSide.receive(peerId, dialBean);
+                            internal.receive(peerId, dialBean);
 
                         } else if (phoneMsg.getType() == PhoneMsg.ACCEPT) {
 
-                            callingSide.join(phoneMsg.getMsg());
+                            internal.join(phoneMsg.getMsg());
 
                         } else if (phoneMsg.getType() == PhoneMsg.JOINED) {
 
-                            calledSide.join3();
+                            internal.join3();
 
 
                         } else if (phoneMsg.getType() == PhoneMsg.HANGUP) {
@@ -185,8 +182,6 @@ public class NetPhone {
         }
 
         internal= new InternalImpl(this, mRtcEngine);
-        callingSide = new CallingSide(this, mRtcEngine, internal);
-        calledSide = new CalledSide(this, mRtcEngine, internal);
     }
 
     public void destroy() {
@@ -256,12 +251,7 @@ public class NetPhone {
         @Override
         public void onLeaveChannel(RtcStats stats) {
             Logger.d("onLeaveChannel with: stats = " + gson.toJson(stats) + "");
-            if (callingSide.isActive()) {
-                callingSide.afterHangUp();
-            }
-            if (calledSide.isActive()) {
-                calledSide.afterHangUp();
-            }
+            internal.afterHangUp();
         }
 
         @Override
@@ -279,14 +269,14 @@ public class NetPhone {
      * @param dialBean      拨打参数
      */
     public boolean dial(String remoteAccount, DialBean dialBean) {
-        return callingSide.dial(remoteAccount, dialBean);
+        return internal.dial(remoteAccount, dialBean);
     }
 
     /**
      * 接听
      */
     public void accept() {
-        calledSide.accept();
+        internal.accept();
     }
 
     /**
@@ -306,8 +296,8 @@ public class NetPhone {
 //        if (callingSide.isActive()) {
 //            callingSide.hangUp();
 //        }
-//        if (calledSide.isActive()) {
-//            calledSide.hangUp();
+//        if (internal.isActive()) {
+//            internal.hangUp();
 //        }
     }
 
@@ -319,8 +309,8 @@ public class NetPhone {
 //        if (callingSide.isActive()) {
 //            callingSide.hangUp2();
 //        }
-//        if (calledSide.isActive()) {
-//            calledSide.hangUp2();
+//        if (internal.isActive()) {
+//            internal.hangUp2();
 //        }
     }
 
@@ -429,12 +419,7 @@ public class NetPhone {
 
     //用于单元测试
     PhoneState getHostState() {
-        return callingSide.getState();
-    }
-
-    //用于单元测试
-    PhoneState getClientState() {
-        return calledSide.getState();
+        return internal.state();
     }
 
 

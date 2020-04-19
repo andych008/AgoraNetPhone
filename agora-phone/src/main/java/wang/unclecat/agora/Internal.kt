@@ -1,37 +1,35 @@
-package wang.unclecat.agora;
+package wang.unclecat.agora
 
 /**
  * AGCalling和AGCalled公共实现
  *
  * @author 喵叔catuncle    19-12-28
  */
-interface Internal {
-
+internal interface Internal {
     /**
      * 是否被激活(即非idle状态)
      */
-    boolean isActive();
+    fun isActive(): Boolean?
 
     /**
      * 当前状态
      */
-    PhoneState getState();
+    fun state(): PhoneState
 
-    boolean transAndCheck(InternalImpl.Event event);
+    fun transAndCheck(event: InternalImpl.Event): Boolean
+
     /**
      * 挂断
      */
-    void hangUp();
-
+    fun hangUp()
 
     /**
      * 被告知挂断
      */
-    void hangUp2();
-
+    fun hangUp2()
 
     /**
      * 挂断后更新状态
      */
-    void afterHangUp();
+    fun afterHangUp()
 }
