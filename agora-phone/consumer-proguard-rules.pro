@@ -22,7 +22,5 @@
 
 #-----------keep agora -------------------
 -keep class io.agora.**{*;}
-#-----------keep squirrel-foundation -------------------
--keep class org.squirrelframework.foundation.**{*;}
 #-----------keep NetPhone -------------------
 -keep class wang.unclecat.agora.**{*;}

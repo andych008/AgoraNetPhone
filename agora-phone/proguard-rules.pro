@@ -22,8 +22,6 @@
 
 #-----------keep agora -------------------
 -keep class io.agora.**{*;}
-#-----------keep squirrel-foundation -------------------
--keep class org.squirrelframework.foundation.**{*;}
 
 #-----------keep NetPhone -------------------
 # preserve the line number information for debugging stack traces.
