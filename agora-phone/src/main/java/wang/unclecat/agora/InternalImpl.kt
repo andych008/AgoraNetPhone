@@ -30,6 +30,10 @@ internal class InternalImpl(private val netPhone: NetPhone,
         return phoneSM.state
     }
 
+    override fun transition(event: Event) {
+        phoneSM.transition(event)
+    }
+
     /**
      * 挂断
      */

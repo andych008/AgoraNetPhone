@@ -26,7 +26,7 @@ internal class CallingSide(private val netPhone: NetPhone, private val mRtcEngin
                 mRtcEngine.setDefaultAudioRoutetoSpeakerphone(false)
                 netPhone.sendPeerMessage(remoteAccount, PhoneMsg.createDialMsg(dialBean).toJsonString())
                 internal.remoteAccount = remoteAccount
-                internal.phoneSM.transition(InternalImpl.Event.OnDial)
+                transition(InternalImpl.Event.OnDial)
             } else {
                 Logger.d("用户未登录")
             }
@@ -41,7 +41,7 @@ internal class CallingSide(private val netPhone: NetPhone, private val mRtcEngin
 
     fun handleOnJoinChannelSuccess() {
         netPhone.sendPeerMessage(internal.remoteAccount, PhoneMsg.createJoinedMsg().toJsonString())
-        internal.phoneSM.transition(InternalImpl.Event.OnJoin2)
+        transition(InternalImpl.Event.OnJoin2)
     }
 
 }

@@ -24,7 +24,7 @@ internal class CalledSide(private val netPhone: NetPhone, private val mRtcEngine
         } else {
             internal.remoteAccount = remoteAccount
             internal.dialBean = dialBean
-            internal.phoneSM.transition(InternalImpl.Event.OnReceive)
+            transition(InternalImpl.Event.OnReceive)
         }
     }
 
@@ -34,21 +34,21 @@ internal class CalledSide(private val netPhone: NetPhone, private val mRtcEngine
     fun accept() {
         Logger.d("accept()")
         if (internal.remoteAccount != null) {
-            internal.phoneSM.transition(InternalImpl.Event.OnAccept)
             netPhone.joinChannel(createChannel())
+            transition(InternalImpl.Event.OnAccept)
         }
     }
 
     fun handleOnJoinChannelSuccess(channel: String?) {
         netPhone.sendPeerMessage(internal.remoteAccount, PhoneMsg.createAcceptMsg(channel).toJsonString())
-        internal.phoneSM.transition(InternalImpl.Event.OnJoin1)
+        transition(InternalImpl.Event.OnJoin1)
     }
 
     /**
      * 触发Join3，即将进入通话状态
      */
     fun join3() {
-        internal.phoneSM.transition(InternalImpl.Event.OnJoin3)
+        transition(InternalImpl.Event.OnJoin3)
     }
 
     // TODO: by catuncle 19-12-24 模拟生成房间号

@@ -17,6 +17,7 @@ interface Internal {
      */
     PhoneState getState();
 
+    void transition(InternalImpl.Event event);
     /**
      * 挂断
      */
