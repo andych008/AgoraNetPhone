@@ -35,6 +35,7 @@
         android:allowBackup="true"
         android:supportsRtl="true"
         android:icon="@mipmap/debug_ic_launcher">
+        <uses-library android:name="android.test.runner"/>
         <activity
             android:name=".DebugActivity"
             android:screenOrientation="portrait">
