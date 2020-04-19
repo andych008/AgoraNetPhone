@@ -44,17 +44,17 @@ public class NetPhoneTest {
 
         sleep(100);
 
-        assertEquals(NetPhone.getInstance().getHostState(), PhoneState.CONNECTING.INSTANCE);
+        assertEquals(NetPhone.getInstance().getHostState(), PhoneState.ACalling.INSTANCE);
         System.out.println("--------CONNECTING---------");
 
 
         sleep(2000);
-        assertEquals(PhoneState.SPEAKING.INSTANCE, NetPhone.getInstance().getHostState());
+        assertEquals(PhoneState.Speaking.INSTANCE, NetPhone.getInstance().getHostState());
         System.out.println("--------SPEAKING---------");
 
         NetPhone.getInstance().hangUp();
         sleep(1500);
-        assertEquals(PhoneState.IDLE.INSTANCE, NetPhone.getInstance().getHostState());
+        assertEquals(PhoneState.Idle.INSTANCE, NetPhone.getInstance().getHostState());
         System.out.println("----------IDLE-------");
     }
 
@@ -74,11 +74,11 @@ public class NetPhoneTest {
         dial();
 
         sleep(100);
-        assertEquals(PhoneState.CONNECTING.INSTANCE, NetPhone.getInstance().getHostState());
+        assertEquals(PhoneState.ACalling.INSTANCE, NetPhone.getInstance().getHostState());
         System.out.println("--------CONNECTING---------");
 
         sleep(2500);
-        assertEquals(PhoneState.IDLE.INSTANCE, NetPhone.getInstance().getHostState());
+        assertEquals(PhoneState.Idle.INSTANCE, NetPhone.getInstance().getHostState());
         System.out.println("----------IDLE-------");
     }
 
@@ -93,12 +93,12 @@ public class NetPhoneTest {
         dial();
 
         sleep(100);
-        assertEquals(PhoneState.CONNECTING.INSTANCE, NetPhone.getInstance().getHostState());
+        assertEquals(PhoneState.ACalling.INSTANCE, NetPhone.getInstance().getHostState());
         System.out.println("--------CONNECTING---------");
 
         NetPhone.getInstance().hangUp();
         sleep(1500);
-        assertEquals(PhoneState.IDLE.INSTANCE, NetPhone.getInstance().getHostState());
+        assertEquals(PhoneState.Idle.INSTANCE, NetPhone.getInstance().getHostState());
         System.out.println("----------IDLE-------");
     }
 

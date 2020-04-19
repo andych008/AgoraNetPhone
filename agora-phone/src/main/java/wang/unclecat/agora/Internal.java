@@ -17,7 +17,7 @@ interface Internal {
      */
     PhoneState getState();
 
-    void transition(InternalImpl.Event event);
+    boolean transAndCheck(InternalImpl.Event event);
     /**
      * 挂断
      */

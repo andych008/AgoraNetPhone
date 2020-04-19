@@ -6,9 +6,10 @@ package wang.unclecat.agora
  * @author 喵叔catuncle    20-1-5
  */
 sealed class PhoneState {
-    object IDLE : PhoneState()
-    object RINGING : PhoneState()
-    object CONNECTING : PhoneState()
-    object CONNECTED : PhoneState()
-    object SPEAKING : PhoneState()
+    object Idle : PhoneState()
+    object ACalling : PhoneState()
+    object BRinging : PhoneState()
+    object BAccepting : PhoneState()
+    object BJoined : PhoneState()
+    object Speaking : PhoneState()
 }

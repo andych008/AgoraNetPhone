@@ -12,7 +12,6 @@ internal class InternalImpl(private val netPhone: NetPhone,
     var remoteAccount: String? = null
     var dialBean: DialBean? = null
     var startTime: Long = 0
-    private var fromRemoteHangUp = false
     private val mMediaPlayer:MediaPlayer = MediaPlayer()
 
 
@@ -20,9 +19,12 @@ internal class InternalImpl(private val netPhone: NetPhone,
      * 是否被激活(即非idle状态)
      */
     override fun isActive(): Boolean {
-        return phoneSM.state != PhoneState.IDLE
+        return phoneSM.state !is PhoneState.Idle
     }
 
+    fun isACalling(): Boolean {
+        return phoneSM.state is PhoneState.ACalling
+    }
     /**
      * 当前状态
      */
@@ -30,50 +32,69 @@ internal class InternalImpl(private val netPhone: NetPhone,
         return phoneSM.state
     }
 
-    override fun transition(event: Event) {
-        phoneSM.transition(event)
+    override fun transAndCheck(event: Event): Boolean {
+        val b = phoneSM.transition(event) is StateMachine.Transition.Valid
+        if(!b) {
+            val ca = phoneSM.state
+            Logger.e("transAndCheck() failed with: ca = $ca, event = $event")
+        }
+        return b
     }
 
     /**
      * 挂断
      */
     override fun hangUp() {
-        fromRemoteHangUp = false
-        val ca = phoneSM.state
-        Logger.d("hangUp() called with: ca = $ca")
+        Logger.d("hangUp() called")
 
         //告诉对方挂断呼叫
         if (isActive) {
             netPhone.sendPeerMessage(remoteAccount, PhoneMsg.createHangUpMsg().toJsonString())
         }
-
-        //挂断
-        doHangUp(ca)
+        if (phoneSM.state is PhoneState.ACalling ||phoneSM.state is PhoneState.Speaking) {
+            if (transAndCheck(Event.HangUp)) {
+                rtcEngine.leaveChannel()
+            }
+        }
+        if (phoneSM.state is PhoneState.BRinging) {
+            if (transAndCheck(Event.BReject)) {
+                rtcEngine.leaveChannel()
+            }
+        }
     }
 
     /**
      * 被告知挂断
      */
     override fun hangUp2() {
-        fromRemoteHangUp = true
-        val ca = phoneSM.state
-        Logger.d("hangUp2() called with: ca = $ca")
+        Logger.d("hangUp2() called")
 
-        //挂断
-        doHangUp(ca)
+        if (transAndCheck(Event.BeHangUped)) {
+            rtcEngine.leaveChannel()
+        }
+    }
+    fun hangUp3() {
+        Logger.d("hangUp3() called")
+        if (transAndCheck(Event.ARejectedAuto)) {
+            rtcEngine.leaveChannel()
+        }
     }
 
     override fun afterHangUp() {
         netPhone.testCase = 0
-        phoneSM.transition(Event.OnHangUp)
     }
 
-    private fun doHangUp(ca: PhoneState) {
-        if (ca == PhoneState.CONNECTED ||ca == PhoneState.SPEAKING) {
-            rtcEngine.leaveChannel()
-        } else {
-            afterHangUp()
-        }
+
+    fun onBJoinChannelSuccess(channel: String?) {
+        transAndCheck(Event.BJoin1)
+        netPhone.sendPeerMessage(remoteAccount,
+                PhoneMsg.createAcceptMsg(channel).toJsonString())
+    }
+
+    fun onAJoinChannelSuccess() {
+        transAndCheck(Event.AJoin2)
+        netPhone.sendPeerMessage(remoteAccount,
+                PhoneMsg.createJoinedMsg().toJsonString())
     }
 
     private val speakTime: Int
@@ -81,101 +102,123 @@ internal class InternalImpl(private val netPhone: NetPhone,
 
 
 //    /**
-//     * 主叫(动作)：        拨打                           进入2                             挂断
-//     * 主叫(状态)：初始 -------------------------连接中-------------------------------接通---------  初始
-//     * 被叫(状态)：初始 ------------- 响铃--------连接中---------连接上-----------------接通---------  初始
-//     * 被叫(动作)：            来电         接听           进入1               进入3          挂断
+//     * 主叫(动作)：        拨打                                 进入2                             挂断
+//     * 主叫(状态)：初始 -------------------------连接中(呼叫中)-------------------------------接通---------  初始
+//     * 被叫(状态)：初始 ------------- 响铃--------连接中(接听中)---------连接上----------------接通---------  初始
+//     * 被叫(动作)：            来电         接听                进入1               进入3          挂断
 //     */
     //状态切换，及切换成功后的回调。
     val phoneSM = StateMachine.create<PhoneState, Event, SideEffect> {
-        initialState(PhoneState.IDLE)
+        initialState(PhoneState.Idle)
 
-        state<PhoneState.IDLE> {
-            on<Event.OnDial> {
-                Logger.d("主叫：拔打")
-                transitionTo(PhoneState.CONNECTING, SideEffect.LogOnDial)
+        state<PhoneState.Idle> {
+            on<Event.ADial> {
+                Logger.d("主叫：拔打 --->")
+                transitionTo(PhoneState.ACalling, SideEffect.LogADial)
             }
-            on<Event.OnReceive> {
-                Logger.d("被叫：来电")
-                transitionTo(PhoneState.RINGING, SideEffect.LogOnReceive)
-            }
-        }
-        state<PhoneState.RINGING> {
-            on<Event.OnHangUp> {
-                Logger.d("被叫：拒接")
-                transitionTo(PhoneState.IDLE, SideEffect.LogOnHangUp)
-            }
-            on<Event.OnAccept> {
-                Logger.d("被叫：接听")
-                transitionTo(PhoneState.CONNECTING, SideEffect.LogOnAccept)
+            on<Event.BReceive> {
+                Logger.d("被叫：来电 --->")
+                transitionTo(PhoneState.BRinging, SideEffect.LogBReceive)
             }
         }
-        state<PhoneState.CONNECTING> {
-            on<Event.OnHangUp> {
-                Logger.d("主叫：取消拔打")
-                transitionTo(PhoneState.IDLE, SideEffect.LogOnHangUp)
+        state<PhoneState.ACalling> {
+            on<Event.HangUp> {
+                Logger.d("主叫：<--- 主动结束通话-未接通")
+                transitionTo(PhoneState.Idle, SideEffect.LogHangUp)
             }
-            on<Event.OnHangUpAuto> {
-                Logger.d("主叫：占线")
-                transitionTo(PhoneState.IDLE, SideEffect.LogOnHangUp)
+            on<Event.ARejected> {
+                Logger.d("主叫：<--- 被拒接")
+                transitionTo(PhoneState.Idle, SideEffect.LogARejected)
             }
-            on<Event.OnJoin1> {
-                Logger.d("被叫：进入房间（等待主叫加入房间，才可以通话）")
-                transitionTo(PhoneState.CONNECTED, SideEffect.LogOnJoin)
+            on<Event.ARejectedAuto> {
+                Logger.d("主叫：<--- 占线")
+                transitionTo(PhoneState.Idle, SideEffect.LogARejectedAuto)
             }
+
             //被叫加入房间后，主叫再加入房间。主叫加入房间后，直接从PhoneState.CONNECTING 到 State.SPEAKING 跳过 State.CONNECTED
-            on<Event.OnJoin2> {
-                Logger.d("主叫：加入房间-可通话状态")
-                transitionTo(PhoneState.SPEAKING, SideEffect.LogOnSpeaking)
+            on<Event.AJoin2> {
+                Logger.d("主叫：AJoin2加入房间-可通话状态 --->")
+                transitionTo(PhoneState.Speaking, SideEffect.LogAJoin2)
             }
         }
-        state<PhoneState.CONNECTED> {
-            //被叫：可通话状态（等待主叫加入房间，才可以通话）
-            on<Event.OnJoin3> {
-                Logger.d("被叫：可通话状态")
-                transitionTo(PhoneState.SPEAKING, SideEffect.LogOnSpeaking)
+        state<PhoneState.Speaking> {
+            on<Event.HangUp> {
+                Logger.d("主动挂断 --->")
+                transitionTo(PhoneState.Idle, SideEffect.LogHangUp)
+            }
+            on<Event.BeHangUped> {
+                Logger.d("对方挂断 --->")
+                transitionTo(PhoneState.Idle, SideEffect.LogBeHangUped)
             }
         }
-        state<PhoneState.SPEAKING> {
-            on<Event.OnHangUp> {
-                if (fromRemoteHangUp) {
-                    Logger.d("对方挂断")
-                } else {
-                    Logger.d("挂断")
-                }
-                transitionTo(PhoneState.IDLE, SideEffect.LogOnHangUp)
+        state<PhoneState.BRinging> {
+            on<Event.BReject> {
+                Logger.d("被叫：<--- 拒接")
+                transitionTo(PhoneState.Idle, SideEffect.LogBReject)
+            }
+            on<Event.BeHangUped> {
+                Logger.d("对方挂断 --->")
+                transitionTo(PhoneState.Idle, SideEffect.LogBeHangUped)
+            }
+            on<Event.BAccept> {
+                Logger.d("被叫：接听 --->")
+                transitionTo(PhoneState.BAccepting, SideEffect.LogBAccept)
+            }
+        }
+        state<PhoneState.BAccepting> {
+            on<Event.BJoin1> {
+                //（等待主叫加入房间，才可以通话）
+                Logger.d("被叫：BJoin1进入房间 --->")
+                transitionTo(PhoneState.BJoined, SideEffect.LogBJoin1)
+            }
+        }
+        state<PhoneState.BJoined> {
+            on<Event.BJoin3> {
+                //（等待主叫加入房间，才可以通话）
+                Logger.d("被叫：BJoin3可通话状态 --->")
+                transitionTo(PhoneState.Speaking, SideEffect.LogBJoin3)
             }
         }
         onTransition {
             val validTransition = it as? StateMachine.Transition.Valid ?: return@onTransition
             when (validTransition.sideEffect) {
-                SideEffect.LogOnDial -> {
+                SideEffect.LogADial -> {
                     netPhone.listener.onHostDial(dialBean)
                 }
-                SideEffect.LogOnReceive -> {
-                    startMediaPlayer()
-                    netPhone.listener.onClientReceiveDial(remoteAccount, dialBean)
+                SideEffect.LogARejected -> {
+                    netPhone.listener.onHangUp(false, 0)
                 }
-                SideEffect.LogOnAccept -> {
-                    stopMediaPlayer()
+                SideEffect.LogARejectedAuto -> {
+                    netPhone.listener.onHangUp(false, 0)
                 }
-                SideEffect.LogOnJoin -> {
-
-                }
-                SideEffect.LogOnSpeaking -> {
+                SideEffect.LogAJoin2 -> {
                     rtcEngine.setEnableSpeakerphone(false)
                     startTime = System.currentTimeMillis()
                     netPhone.listener.onReadyToSpeak(remoteAccount)
                 }
-                SideEffect.LogOnHangUp -> {
+
+                SideEffect.LogBReceive -> {
+                    startMediaPlayer()
+                    netPhone.listener.onClientReceiveDial(remoteAccount, dialBean)
+                }
+                SideEffect.LogBReject -> {
                     stopMediaPlayer()
-                    val connected = validTransition.fromState == PhoneState.SPEAKING
-                    val totalDuration = if (connected) speakTime else 0
-                    if (fromRemoteHangUp) {
-                        netPhone.listener.onRemoteHangUp(connected, totalDuration, remoteAccount)
-                    } else {
-                        netPhone.listener.onHangUp(connected, totalDuration)
-                    }
+                    netPhone.listener.onHangUp(false, 0)
+                }
+                SideEffect.LogBJoin1 -> {
+                    stopMediaPlayer()
+                }
+                SideEffect.LogBJoin3 -> {
+                    rtcEngine.setEnableSpeakerphone(false)
+                    startTime = System.currentTimeMillis()
+                    netPhone.listener.onReadyToSpeak(remoteAccount)
+                }
+                SideEffect.LogHangUp -> {
+                    netPhone.listener.onHangUp(true, speakTime)
+                }
+                SideEffect.LogBeHangUped -> {
+                    stopMediaPlayer()
+                    netPhone.listener.onRemoteHangUp(true, speakTime, remoteAccount)
                 }
             }
         }
@@ -183,23 +226,50 @@ internal class InternalImpl(private val netPhone: NetPhone,
 
 
     sealed class Event {
-        object OnDial : Event()
-        object OnReceive : Event()
-        object OnAccept : Event()
-        object OnJoin1 : Event()
-        object OnJoin2 : Event()
-        object OnJoin3 : Event()
-        object OnHangUp : Event()
-        object OnHangUpAuto : Event()
+        /** 拨打 */
+        object ADial : Event()
+        /** 被拒接 */
+        object ARejected : Event()
+        /** 占线 */
+        object ARejectedAuto : Event()
+        /** 主叫进入房间 */
+        object AJoin2 : Event()
+
+        /** 来电话了 */
+        object BReceive : Event()
+        /** 拒接 */
+        object BReject : Event()
+        /** 接听 */
+        object BAccept : Event()
+        /** 被叫进入房间 */
+        object BJoin1 : Event()
+        /** 确认主叫已进入房间 */
+        object BJoin3 : Event()
+
+        /** 主动结束通话 */
+        object HangUp : Event()
+        /** 对方结束通话 */
+        object BeHangUped : Event()
     }
 
     sealed class SideEffect() {
-        object LogOnDial : SideEffect()
-        object LogOnReceive : SideEffect()
-        object LogOnAccept : SideEffect()
-        object LogOnJoin : SideEffect()
-        object LogOnSpeaking : SideEffect()
-        object LogOnHangUp : SideEffect()
+        object LogADial : SideEffect()
+        object LogARejected : SideEffect()
+        object LogARejectedAuto : SideEffect()
+        object LogAJoin2 : SideEffect()
+
+
+        object LogBReceive : SideEffect()
+        object LogBReject : SideEffect()
+        object LogBAccept : SideEffect()
+        object LogBJoin1 : SideEffect()
+        object LogBJoin3 : SideEffect()
+
+        //接通后挂断
+        object LogHangUp : SideEffect()
+
+        //接通后被挂断
+        object LogBeHangUped : SideEffect()
     }
 
 

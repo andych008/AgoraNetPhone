@@ -140,7 +140,7 @@ public class NetPhone {
                             hangUp2();
                         } else if (phoneMsg.getType() == PhoneMsg.HANGUP_AUTO) {
                             // TODO: by catuncle 19-12-27 回调通知
-                            hangUp2();
+                            internal.hangUp3();
                         }
                     }
 
@@ -234,12 +234,10 @@ public class NetPhone {
         @Override
         public void onJoinChannelSuccess(String channel, int uid, int elapsed) {
             Logger.d("onJoinChannelSuccess with: channel = " + channel + ", uid = " + uid + ", elapsed = " + elapsed + "");
-            if (callingSide.isActive()) {
-                callingSide.handleOnJoinChannelSuccess();
-            }
-
-            if (calledSide.isActive()) {
-                calledSide.handleOnJoinChannelSuccess(channel);
+            if (internal.isACalling()) {
+                internal.onAJoinChannelSuccess();
+            } else {
+                internal.onBJoinChannelSuccess(channel);
             }
         }
 
@@ -304,24 +302,26 @@ public class NetPhone {
      * 挂断
      */
     public void hangUp() {
-        if (callingSide.isActive()) {
-            callingSide.hangUp();
-        }
-        if (calledSide.isActive()) {
-            calledSide.hangUp();
-        }
+        internal.hangUp();
+//        if (callingSide.isActive()) {
+//            callingSide.hangUp();
+//        }
+//        if (calledSide.isActive()) {
+//            calledSide.hangUp();
+//        }
     }
 
     /**
      * 被告知挂断
      */
     private void hangUp2() {
-        if (callingSide.isActive()) {
-            callingSide.hangUp2();
-        }
-        if (calledSide.isActive()) {
-            calledSide.hangUp2();
-        }
+        internal.hangUp2();
+//        if (callingSide.isActive()) {
+//            callingSide.hangUp2();
+//        }
+//        if (calledSide.isActive()) {
+//            calledSide.hangUp2();
+//        }
     }
 
     //获得独一无二的Psuedo ID
